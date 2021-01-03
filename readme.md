@@ -1,4 +1,4 @@
-# Radio Scanner Streams input to Microprediction.org
+# Radio Scanner Streams for Microprediction.org
 
 There are many online radio scanners, they listen for
 activity on the fire, police, aviation or railroad frequencies

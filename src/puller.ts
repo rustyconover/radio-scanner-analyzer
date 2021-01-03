@@ -6,7 +6,11 @@ const { exec } = require('child_process');
 const bent = require('bent');
 const getBuffer = bent('buffer');
 
-const window_length = 10000;
+// Publish updates on a five minute interval.
+const window_length = 1000 * 60 * 5;
+
+// If a sample has an absolute value larger than this it is
+// considered not "silent".
 const loud_threshold = 3000;
 
 /**
