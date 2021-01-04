@@ -107,7 +107,7 @@ async function analyze_data(data: Buffer, stream_description: string) {
                 if (config != null) {
                     const writer = new MicroWriter(config);
 
-                    const clean_description = stream_description.replace(/[ \.,\(\)\-]/g, '_')
+                    const clean_description = stream_description.replace(/[ \.,\(\)\-\/]/g, '_')
                         .replace(/_+/g, '_')
                         .toLowerCase();
 
