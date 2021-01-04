@@ -70,7 +70,7 @@ async function analyze_data(data: Buffer, stream_description: string) {
                 //console.log("Loud indexes: ", loud_indexes.length);
                 //console.log("Total samples: ", pcm_values.length);
 
-                const diff_indexes = [];
+                const diff_indexes: number[] = [];
 
                 let total_silence_seconds = 0;
 
@@ -94,8 +94,13 @@ async function analyze_data(data: Buffer, stream_description: string) {
                 const active_percent = 1.0 - percent_silent;
 
                 if (config == null) {
+                    const write_key = process.env["MICROPREDICTION_WRITE_KEY"];
+                    if (write_key == null) {
+                        throw new Error("No MICROPREDICTION_WRITE_KEY defined");
+                    }
+
                     config = await MicroWriterConfig.create({
-                        write_key: process.env["MICROPREDICTION_WRITE_KEY"],
+                        write_key,
                     });
                 }
 
@@ -142,7 +147,7 @@ function listenToStream(stream_id: number, description: string) {
     };
 
 
-    const interval_data = [];
+    const interval_data: Buffer[] = [];
     const req = https.request(options, (res) => {
         //        console.log('statusCode:', res.statusCode);
         if (res.statusCode !== 200) {
