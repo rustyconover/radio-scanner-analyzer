@@ -1,5 +1,7 @@
 import * as https from "https";
 import * as fs from "fs";
+import { MicroWriter, MicroWriterOptions, MicroWriterConfig } from "microprediction";
+
 const shell = require('any-shell-escape')
 const { exec } = require('child_process');
 
@@ -7,11 +9,13 @@ const bent = require('bent');
 const getBuffer = bent('buffer');
 
 // Publish updates on a five minute interval.
-const window_length = 1000 * 60 * 5;
+const window_length = 1000 * 10;
 
 // If a sample has an absolute value larger than this it is
 // considered not "silent".
 const loud_threshold = 3000;
+
+let config: MicroWriterOptions | undefined;
 
 /**
  * This function analyzes all of the audio data delivered in
@@ -24,7 +28,7 @@ const loud_threshold = 3000;
  *
  * @param data the data received from the streaming server
  */
-function analyze_data(data: Buffer) {
+async function analyze_data(data: Buffer, stream_description: string) {
     const sample_rate = 16000;
 
     const audio_filename = `/tmp/scanner-audio.${(new Date()).getTime()}.${Math.round(Math.random() * 100000)}.mpeg`;
@@ -40,7 +44,7 @@ function analyze_data(data: Buffer) {
         maxBuffer: 1024 * 1024 * 5,
         encoding: null,
     },
-        (err, stdout) => {
+        async (err, stdout) => {
             fs.unlinkSync(audio_filename);
             if (err) {
                 console.error(err)
@@ -89,7 +93,20 @@ function analyze_data(data: Buffer) {
 
                 const active_percent = 1.0 - percent_silent;
 
-                // FIXME: send these to microprediction now.
+                if (config == null) {
+                    config = await MicroWriterConfig.create({
+                        write_key: process.env["MICROPREDICTION_WRITE_KEY"],
+                    });
+                }
+
+                if (config != null) {
+                    const writer = new MicroWriter(config);
+
+                    const clean_description = stream_description.replace(/[ \.]/g, '_').toLowerCase();
+
+                    console.log(clean_description);
+                    await writer.set(`radio-scanner-${clean_description}.json`, active_percent);
+                }
             }
         })
 }
@@ -129,7 +146,7 @@ function listenToStream(stream_id: number, description: string) {
     const req = https.request(options, (res) => {
         //        console.log('statusCode:', res.statusCode);
         if (res.statusCode !== 200) {
-            console.error(`Bad stream HTTP status code (${stream_id}) ${res.statusCode}, will retry`);
+            console.error(`Bad stream HTTP status code (${stream_id}) (${description}) ${res.statusCode}, will retry`);
             setTimeout(listenToStream, 5000);
             return;
         }
@@ -145,7 +162,7 @@ function listenToStream(stream_id: number, description: string) {
             // Start a new timer for a sampling interval.
             setTimeout(timeout_handler, window_length);
             // Send the data to ffmpeg and parse out the values.
-            analyze_data(final_data);
+            analyze_data(final_data, description);
         };
         setTimeout(timeout_handler, window_length);
 
@@ -188,7 +205,7 @@ async function listenStreams(stream_ids: number[]) {
         }
 
         const stream_title = title_match[1].replace(/ Live Audio Feed$/, '').trim();
-        console.log(stream_title);
+        console.log(`Starting listening to ${stream_title}`);
 
         listenToStream(stream_id, stream_title);
     }
