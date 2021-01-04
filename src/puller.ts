@@ -32,12 +32,14 @@ async function analyze_data(data: Buffer, stream_description: string) {
     const sample_rate = 16000;
 
     const audio_filename = `/tmp/scanner-audio.${(new Date()).getTime()}.${Math.round(Math.random() * 100000)}.mpeg`;
+    const pcm_output = `/tmp/scanner-pcm.${(new Date()).getTime()}.${Math.round(Math.random() * 100000)}.data`;
+
     fs.writeFileSync(audio_filename, data);
     const makePCM = shell([
         'ffmpeg', '-i', audio_filename,
         '-f', 's16le', '-acodec', 'pcm_s16le',
         '-ar', sample_rate,
-        '-'
+        pcm_output,
     ])
 
     exec(makePCM, {
@@ -50,25 +52,26 @@ async function analyze_data(data: Buffer, stream_description: string) {
                 console.error(err)
                 process.exit(1)
             } else {
-                const pcm_values = new Int16Array(stdout.length / 2);
-                for (let i = 0; i < stdout.length; i += 2) {
-                    pcm_values[i / 2] = Math.abs(stdout.readInt16LE(i));
-                }
-
-                if (pcm_values.length > (window_length / 1000) * sample_rate * 1.2) {
-                    return;
-                }
-
                 const loud_indexes = [0];
-                pcm_values.forEach((v, idx) => {
-                    if (v > loud_threshold) {
-                        loud_indexes.push(idx);
-                    }
-                });
-                loud_indexes.push(pcm_values.length - 1);
+                {
+                    const pcm_data = fs.readFileSync(pcm_output, { encoding: null });
+                    fs.unlinkSync(pcm_output);
+                    const pcm_values = new Int16Array(pcm_data.buffer);
 
-                //console.log("Loud indexes: ", loud_indexes.length);
-                //console.log("Total samples: ", pcm_values.length);
+                    if (pcm_values.length > (window_length / 1000) * sample_rate * 1.2) {
+                        return;
+                    }
+
+                    pcm_values.forEach((v, idx) => {
+                        if (Math.abs(v) > loud_threshold) {
+                            loud_indexes.push(idx);
+                        }
+                    });
+                    loud_indexes.push(pcm_values.length - 1);
+                    //                    console.log("Total samples: ", pcm_values.length);
+                };
+
+                //                console.log("Loud indexes: ", loud_indexes.length);
 
                 const diff_indexes: number[] = [];
 
