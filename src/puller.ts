@@ -41,7 +41,7 @@ async function analyze_data(data: Buffer, stream_description: string) {
     ])
 
     exec(makePCM, {
-        maxBuffer: 1024 * 1024 * 12,
+        maxBuffer: 1024 * 1024 * 64,
         encoding: null,
     },
         async (err, stdout) => {
