@@ -15,8 +15,8 @@ of seconds where there was "activity" on the stream as a time
 series so other programs can build models and predict it.
 
 Ideally these models would be a part of ensemble of models to
-perform anonomly detection. There is likely a baseline of activity
-that occurrs on all of these channels, detecting deviations from
+perform anomaly detection. There is likely a baseline of activity
+that occurs on all of these channels, detecting deviations from
 that baseline may signal events of interest are occurring.
 
 # Code
