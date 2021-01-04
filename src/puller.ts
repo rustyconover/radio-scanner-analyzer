@@ -107,10 +107,12 @@ async function analyze_data(data: Buffer, stream_description: string) {
                 if (config != null) {
                     const writer = new MicroWriter(config);
 
-                    const clean_description = stream_description.replace(/[ \.]/g, '_').toLowerCase();
+                    const clean_description = stream_description.replace(/[ \.,\(\)\-]/g, '_')
+                        .replace(/_+/g, '_')
+                        .toLowerCase();
 
                     console.log(clean_description);
-                    await writer.set(`radio-scanner-${clean_description}.json`, active_percent);
+                    await writer.set(`scanner-audio-${clean_description}.json`, active_percent);
                 }
             }
         })
