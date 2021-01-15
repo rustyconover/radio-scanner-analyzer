@@ -158,7 +158,7 @@ function listenToStream(stream_id: number, description: string) {
         //        console.log('statusCode:', res.statusCode);
         if (res.statusCode !== 200) {
             console.error(`Bad stream HTTP status code (${stream_id}) (${description}) ${res.statusCode}, will retry`);
-            setTimeout(listenToStream, 5000);
+            setTimeout(listenToStream, 5000, stream_id, description);
             return;
         }
         //        console.log('headers:', res.headers);
@@ -185,14 +185,14 @@ function listenToStream(stream_id: number, description: string) {
         res.once('end', () => {
             console.log(`Reached the end of the stream`);
             // Try to listen again after 2 seconds.
-            setTimeout(listenToStream, 2000);
+            setTimeout(listenToStream, 2000, stream_id, description);
         })
     });
 
     req.on('error', (e) => {
         console.error(`Error receiving stream: ${e}`);
         // Try to listen again after 2 seconds.
-        setTimeout(listenToStream, 2000);
+        setTimeout(listenToStream, 2000, stream_id, description);
     });
     req.end();
 }
@@ -224,7 +224,7 @@ async function listenStreams(stream_ids: number[]) {
 
 // This is just an example collection of streams.
 const stream_ids = [32304, 33162, 19349, 9358, 1189, 2668, 33453, 22184, 27326,
-    3246, 9803, 9059, 9466, 32917, 31143, 27800, 32942, 32913, 315,
+    3246, 9803, 9059, 9466, 32917, 31143, 27800, 32942, 32913,
     28826, 26857];
 
 listenStreams(stream_ids);
