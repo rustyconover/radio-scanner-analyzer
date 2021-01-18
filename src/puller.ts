@@ -161,7 +161,10 @@ function listenToStream(stream_id: number, description: string) {
     const req = https.request(options, (res) => {
         //        console.log('statusCode:', res.statusCode);
         if (res.statusCode !== 200) {
-            console.error(`Bad stream HTTP status code (${stream_id}) (${description}) ${res.statusCode}, will retry`);
+            console.error(`Bad stream HTTP status code (${stream_id}) (${description}) ${res.statusCode}`);
+            if (res.statusCode === 404) {
+                return;
+            }
             setTimeout(listenToStream, 5000, stream_id, description);
             return;
         }
