@@ -48,6 +48,7 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
     // Now here is where the problem can be, if there are too many
     // streams being analyzed at once.
     try {
+        console.log(makePCM);
         const f = execSync(makePCM, {
             maxBuffer: 1024 * 1024 * 64,
             encoding: null,
@@ -60,7 +61,7 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
         console.log("Returning");
         return;
     } finally {
-        fs.unlinkSync(audio_filename);
+//        fs.unlinkSync(audio_filename);
         console.log("Cleaning up raw audio");
     }
 
