@@ -1,6 +1,7 @@
 import * as https from "https";
 import * as fs from "fs";
 import { MicroWriter, MicroWriterOptions, MicroWriterConfig } from "microprediction";
+import { execSync } from "child_process";
 
 const shell = require('any-shell-escape')
 const { exec } = require('child_process');
@@ -28,7 +29,7 @@ let config: MicroWriterOptions | undefined;
  *
  * @param data the data received from the streaming server
  */
-async function analyze_data(data: Buffer, stream_description: string): Promise<boolean> {
+async function analyze_data(data: Buffer, stream_description: string): Promise<void> {
     const sample_rate = 16000;
 
     const audio_filename = `/tmp/scanner-audio.${(new Date()).getTime()}.${Math.round(Math.random() * 100000)}.mpeg`;
@@ -42,88 +43,86 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<b
         pcm_output,
     ])
 
-    return new Promise((resolve, reject) =>
-        exec(makePCM, {
+    // Now here is where the problem can be, if there are too many
+    // streams being analyzed at once.
+    try {
+        execSync(makePCM, {
             maxBuffer: 1024 * 1024 * 64,
             encoding: null,
-        },
-            async (err: any) => {
-                fs.unlinkSync(audio_filename);
-                if (err) {
-                    console.error(err)
-                    reject(err);
-                    return;
-                }
+        });
+    } catch(e) {
+        console.error("Error running ffmpeg");
+        console.error(e);
+        return;
+    } finally {
+        fs.unlinkSync(audio_filename);
+    }
 
-                const loud_indexes = [0];
-                {
-                    const pcm_data = fs.readFileSync(pcm_output, { encoding: null });
-                    fs.unlinkSync(pcm_output);
-                    const pcm_values = new Int16Array(pcm_data.buffer);
+    const loud_indexes = [0];
+    {
+        const pcm_data = fs.readFileSync(pcm_output, { encoding: null });
+        fs.unlinkSync(pcm_output);
+        const pcm_values = new Int16Array(pcm_data.buffer);
 
-                    if (pcm_values.length > (window_length / 1000) * sample_rate * 1.2) {
-                        return;
-                    }
+        if (pcm_values.length > (window_length / 1000) * sample_rate * 1.2) {
+            return;
+        }
 
-                    pcm_values.forEach((v, idx) => {
-                        if (Math.abs(v) > loud_threshold) {
-                            loud_indexes.push(idx);
-                        }
-                    });
-                    loud_indexes.push(pcm_values.length - 1);
-                    //                    console.log("Total samples: ", pcm_values.length);
-                };
-
-                //                console.log("Loud indexes: ", loud_indexes.length);
-
-                const diff_indexes: number[] = [];
-
-                let total_silence_seconds = 0;
-
-                if (loud_indexes.length < 2) {
-                    total_silence_seconds = window_length / 1000;
-                }
-                for (let i = 1; i < loud_indexes.length; i++) {
-                    const sample_dist = loud_indexes[i] - loud_indexes[i - 1];
-                    if (sample_dist > (sample_rate * .25)) {
-                        diff_indexes.push(sample_dist);
-                        // console.log("Interval:", sample_dist / sample_rate);
-                        total_silence_seconds += sample_dist / sample_rate;
-                    }
-                }
-
-                total_silence_seconds = Math.min(total_silence_seconds, window_length / 1000);[]
-                //                console.log("Total silence:", total_silence_seconds);
-                const percent_silent = total_silence_seconds / (window_length / 1000);
-                console.log("Silence Percentage", percent_silent);
-
-                const active_percent = 1.0 - percent_silent;
-
-                if (config == null) {
-                    const write_key = process.env["MICROPREDICTION_WRITE_KEY"];
-                    if (write_key == null) {
-                        throw new Error("No MICROPREDICTION_WRITE_KEY defined");
-                    }
-
-                    config = await MicroWriterConfig.create({
-                        write_key,
-                    });
-                }
-
-                if (config != null) {
-                    const writer = new MicroWriter(config);
-
-                    const clean_description = stream_description.replace(/[ \.,\(\)\-\/]/g, '_')
-                        .replace(/_+/g, '_')
-                        .toLowerCase();
-
-                    console.log(clean_description);
-                    await writer.set(`scanner-audio-${clean_description}.json`, active_percent);
-                }
-                resolve(true);
-                return;
+        pcm_values.forEach((v, idx) => {
+            if (Math.abs(v) > loud_threshold) {
+                loud_indexes.push(idx);
             }
-        ));
+        });
+        loud_indexes.push(pcm_values.length - 1);
+        //                    console.log("Total samples: ", pcm_values.length);
+    };
+
+    //                console.log("Loud indexes: ", loud_indexes.length);
+
+    const diff_indexes: number[] = [];
+
+    let total_silence_seconds = 0;
+
+    if (loud_indexes.length < 2) {
+        total_silence_seconds = window_length / 1000;
+    }
+    for (let i = 1; i < loud_indexes.length; i++) {
+        const sample_dist = loud_indexes[i] - loud_indexes[i - 1];
+        if (sample_dist > (sample_rate * .25)) {
+            diff_indexes.push(sample_dist);
+            // console.log("Interval:", sample_dist / sample_rate);
+            total_silence_seconds += sample_dist / sample_rate;
+        }
+    }
+
+    total_silence_seconds = Math.min(total_silence_seconds, window_length / 1000);[]
+    //                console.log("Total silence:", total_silence_seconds);
+    const percent_silent = total_silence_seconds / (window_length / 1000);
+    console.log("Silence Percentage", percent_silent);
+
+    const active_percent = 1.0 - percent_silent;
+
+    if (config == null) {
+        const write_key = process.env["MICROPREDICTION_WRITE_KEY"];
+        if (write_key == null) {
+            throw new Error("No MICROPREDICTION_WRITE_KEY defined");
+        }
+
+        config = await MicroWriterConfig.create({
+            write_key,
+        });
+    }
+
+    if (config != null) {
+        const writer = new MicroWriter(config);
+
+        const clean_description = stream_description.replace(/[ \.,\(\)\-\/]/g, '_')
+            .replace(/_+/g, '_')
+            .toLowerCase();
+
+        console.log(clean_description);
+        await writer.set(`scanner-audio-${clean_description}.json`, active_percent);
+    }
 }
 
 
