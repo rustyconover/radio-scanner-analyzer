@@ -9,7 +9,7 @@ const bent = require('bent');
 const getBuffer = bent('buffer');
 
 // Publish updates on a five minute interval.
-const window_length = 1000 * 10;
+const window_length = 1000 * 60 * 5;
 
 // If a sample has an absolute value larger than this it is
 // considered not "silent".
@@ -33,8 +33,6 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
 
     const audio_filename = `/tmp/scanner-audio.${(new Date()).getTime()}.${Math.round(Math.random() * 100000)}.mpeg`;
     const pcm_output = `/tmp/scanner-pcm.${(new Date()).getTime()}.${Math.round(Math.random() * 100000)}.data`;
-
-    console.log("Analyzing", audio_filename);
 
     fs.writeFileSync(audio_filename, data);
     const makePCM = shell([
