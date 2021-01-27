@@ -38,6 +38,7 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
     fs.writeFileSync(audio_filename, data);
     const makePCM = shell([
         'ffmpeg', '-i', audio_filename,
+        '-hide_banner',
         '-f', 's16le', '-acodec', 'pcm_s16le',
         '-ar', sample_rate,
         pcm_output,
@@ -50,7 +51,7 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
             maxBuffer: 1024 * 1024 * 64,
             encoding: null,
         });
-    } catch(e) {
+    } catch (e) {
         console.error("Error running ffmpeg");
         console.error(e);
         console.log("Returning");
@@ -114,16 +115,14 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
         });
     }
 
-    if (config != null) {
-        const writer = new MicroWriter(config);
+    const writer = new MicroWriter(config);
 
-        const clean_description = stream_description.replace(/[ \.,\(\)\-\/]/g, '_')
-            .replace(/_+/g, '_')
-            .toLowerCase();
+    const clean_description = stream_description.replace(/[ \.,\(\)\-\/]/g, '_')
+        .replace(/_+/g, '_')
+        .toLowerCase();
 
-        console.log(clean_description);
-        await writer.set(`scanner-audio-${clean_description}.json`, active_percent);
-    }
+    console.log(clean_description);
+    await writer.set(`scanner-audio-${clean_description}.json`, active_percent);
 }
 
 
