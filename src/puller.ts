@@ -52,6 +52,7 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
             maxBuffer: 1024 * 1024 * 64,
             encoding: null,
         });
+        console.log("Ffmpeg finished");
     } catch (e) {
         console.error("Error running ffmpeg");
         console.error(e);
@@ -59,6 +60,7 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
         return;
     } finally {
         fs.unlinkSync(audio_filename);
+        console.log("Cleaning up raw audio");
     }
 
     console.log("Analyzing");
