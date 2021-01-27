@@ -10,7 +10,7 @@ const bent = require('bent');
 const getBuffer = bent('buffer');
 
 // Publish updates on a five minute interval.
-const window_length = 1000 * 30;
+const window_length = 1000 * 10;
 
 // If a sample has an absolute value larger than this it is
 // considered not "silent".
