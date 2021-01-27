@@ -46,30 +46,21 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
         pcm_output,
     ])
 
-    console.log("Command line");
-    console.log(makePCM);
-
-
     // Now here is where the problem can be, if there are too many
     // streams being analyzed at once.
     try {
-        console.log(makePCM);
          execSync(makePCM, {
              maxBuffer: 1024 * 1024 * 64,
              encoding: null,
          });
-        console.log("Ffmpeg finished");
     } catch (e) {
         console.error("Error running ffmpeg");
         console.error(e);
-        console.log("Returning");
         return;
     } finally {
-//        fs.unlinkSync(audio_filename);
-        console.log("Cleaning up raw audio");
+        fs.unlinkSync(audio_filename);
     }
 
-    console.log("Analyzing");
     const loud_indexes = [0];
     {
         const pcm_data = fs.readFileSync(pcm_output, { encoding: null });
@@ -252,59 +243,59 @@ async function listenStreams(stream_ids: number[]) {
 
 // This is just an example collection of streams.
 const stream_ids = new Set([32304,
-    // 33162, 19349, 9358, 1189, 2668, 33453, 22184, 27326,
-    // 3246, 9803, 9059, 9466, 32917, 31143, 27800, 32942, 32913,
-    // 28826, 26857,
-    // 10277,
-    // 10294,
-    // 1102,
-    // 11208,
-    // 11446,
-    // 13544,
-    // 13549,
-    // 13671,
-    // 13743,
-    // 13853,
-    // 13928,
-    // 14395,
-    // 16904,
-    // 1813,
-    // 188,
-    // 19053,
-    // 19080,
-    // 19346,
-    // 21738,
-    // 22101,
-    // 22346,
-    // 2344,
-    // 24550,
-    // 25304,
-    // 25467,
-    // 2648,
-    // 26699,
-    // 26933,
-    // 27719,
-    // 28068,
-    // 2858,
-    // 29604,
-    // 30088,
-    // 30587,
-    // 30589,
-    // 31352,
-    // 31779,
-    // 32252,
-    // 32602,
-    // 33016,
-    // 34105,
-    // 3691,
-    // 3737,
-    // 4142,
-    // 5163,
-    // 5623,
-    // 5725,
-    // 602,
-    // 9059,
-    // 9358,
+    33162, 19349, 9358, 1189, 2668, 33453, 22184, 27326,
+    3246, 9803, 9059, 9466, 32917, 31143, 27800, 32942, 32913,
+    28826, 26857,
+    10277,
+    10294,
+    1102,
+    11208,
+    11446,
+    13544,
+    13549,
+    13671,
+    13743,
+    13853,
+    13928,
+    14395,
+    16904,
+    1813,
+    188,
+    19053,
+    19080,
+    19346,
+    21738,
+    22101,
+    22346,
+    2344,
+    24550,
+    25304,
+    25467,
+    2648,
+    26699,
+    26933,
+    27719,
+    28068,
+    2858,
+    29604,
+    30088,
+    30587,
+    30589,
+    31352,
+    31779,
+    32252,
+    32602,
+    33016,
+    34105,
+    3691,
+    3737,
+    4142,
+    5163,
+    5623,
+    5725,
+    602,
+    9059,
+    9358,
 ]);
 
 listenStreams(Array.from(stream_ids));
