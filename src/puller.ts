@@ -4,7 +4,6 @@ import { MicroWriter, MicroWriterOptions, MicroWriterConfig } from "micropredict
 import { execSync } from "child_process";
 
 const shell = require('any-shell-escape')
-const { exec } = require('child_process');
 
 const bent = require('bent');
 const getBuffer = bent('buffer');
@@ -35,6 +34,8 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
     const audio_filename = `/tmp/scanner-audio.${(new Date()).getTime()}.${Math.round(Math.random() * 100000)}.mpeg`;
     const pcm_output = `/tmp/scanner-pcm.${(new Date()).getTime()}.${Math.round(Math.random() * 100000)}.data`;
 
+    console.log("Analyzing", audio_filename);
+
     fs.writeFileSync(audio_filename, data);
     const makePCM = shell([
         'ffmpeg', '-i', audio_filename,
@@ -44,6 +45,10 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
         '-ar', sample_rate,
         pcm_output,
     ])
+
+    console.log("Command line");
+    console.log(makePCM);
+
 
     // Now here is where the problem can be, if there are too many
     // streams being analyzed at once.
