@@ -48,10 +48,11 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
     // Now here is where the problem can be, if there are too many
     // streams being analyzed at once.
     try {
-        execSync(makePCM, {
+        const f = execSync(makePCM, {
             maxBuffer: 1024 * 1024 * 64,
             encoding: null,
         });
+        console.log(f);
         console.log("Ffmpeg finished");
     } catch (e) {
         console.error("Error running ffmpeg");
