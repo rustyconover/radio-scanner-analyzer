@@ -39,6 +39,7 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
     const makePCM = shell([
         'ffmpeg', '-i', audio_filename,
         '-hide_banner',
+        '-loglevel', 'warning',
         '-f', 's16le', '-acodec', 'pcm_s16le',
         '-ar', sample_rate,
         pcm_output,
