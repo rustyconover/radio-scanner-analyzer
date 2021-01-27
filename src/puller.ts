@@ -10,7 +10,7 @@ const bent = require('bent');
 const getBuffer = bent('buffer');
 
 // Publish updates on a five minute interval.
-const window_length = 1000 * 60 * 5;
+const window_length = 1000 * 30;
 
 // If a sample has an absolute value larger than this it is
 // considered not "silent".
@@ -53,6 +53,7 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
     } catch(e) {
         console.error("Error running ffmpeg");
         console.error(e);
+        console.log("Returning");
         return;
     } finally {
         fs.unlinkSync(audio_filename);
