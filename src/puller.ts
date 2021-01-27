@@ -61,6 +61,7 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
         fs.unlinkSync(audio_filename);
     }
 
+    console.log("Analyzing");
     const loud_indexes = [0];
     {
         const pcm_data = fs.readFileSync(pcm_output, { encoding: null });
@@ -68,6 +69,7 @@ async function analyze_data(data: Buffer, stream_description: string): Promise<v
         const pcm_values = new Int16Array(pcm_data.buffer);
 
         if (pcm_values.length > (window_length / 1000) * sample_rate * 1.2) {
+            console.log("Skipping window")
             return;
         }
 
