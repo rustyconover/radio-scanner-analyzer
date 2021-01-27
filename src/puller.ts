@@ -196,6 +196,8 @@ function listenToStream(stream_id: number, description: string) {
                 await analyze_data(final_data, description);
             } catch (e) {
                 // Cancel this request, since the data was corrupted.
+                console.log("Analysis error");
+                console.log(e);
                 req.abort();
                 interval_data.splice(0);
                 setTimeout(listenToStream, 2000, stream_id, description);
